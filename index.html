@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจสอบผลการเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+        .hide { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-800 shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center text-white">
+            <h1 class="text-xl font-bold">ระบบตรวจสอบผลการเรียน</h1>
+            <!-- เพิ่ม ID ให้ปุ่ม Navbar Admin เพื่อง่ายต่อการควบคุม -->
+            <button id="navAdminBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg text-sm font-medium transition shadow">
+                จัดการระบบ (Admin)
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-4 mt-6">
+
+        <!-- 1. หน้า User (ล็อกอินนักเรียน) -->
+        <section id="studentLoginSection" class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg border border-gray-100 mt-10">
+            <h2 class="text-2xl font-bold text-center text-blue-800 mb-6">ตรวจสอบผลการเรียน</h2>
+            <form id="studentForm" class="space-y-5">
+                <div>
+                    <label class="block mb-1 text-sm font-medium text-gray-700">เลือกชื่อ - นามสกุล</label>
+                    <select id="studentSelect" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- กำลังโหลดข้อมูล... --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-medium text-gray-700">เลขประจำตัวประชาชน (13 หลัก)</label>
+                    <input type="text" id="idCardInput" required placeholder="กรอกเลขประจำตัวประชาชน" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition shadow-md">
+                    ตรวจสอบผลการเรียน
+                </button>
+            </form>
+        </section>
+
+        <!-- 2. หน้าแสดงผลการเรียน -->
+        <section id="studentResultSection" class="hide max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            <div class="p-6">
+                <button id="backToLoginBtn" class="text-blue-600 hover:underline mb-4 text-sm flex items-center">
+                    &larr; กลับหน้าเข้าสู่ระบบ
+                </button>
+                
+                <div class="border border-gray-300 rounded-t-lg overflow-hidden">
+                    <div class="bg-gray-100 text-center font-bold py-3 text-lg border-b border-gray-300">
+                        ข้อมูลของนักเรียน
+                    </div>
+                    <div class="grid grid-cols-4 border-b border-gray-300">
+                        <div class="col-span-1 p-3 font-semibold border-r border-gray-300 bg-gray-50">ชื่อ - นามสกุล</div>
+                        <div class="col-span-3 p-3" id="resName">-</div>
+                    </div>
+                    <div class="grid grid-cols-4 border-b border-gray-300">
+                        <div class="col-span-1 p-3 font-semibold border-r border-gray-300 bg-gray-50">ระดับชั้น</div>
+                        <div class="col-span-3 p-3" id="resLevel">-</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto mt-4">
+                    <table class="w-full text-center border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 p-2 w-16">ลำดับ</th>
+                                <th class="border border-gray-300 p-2 w-24">รหัสวิชา</th>
+                                <th class="border border-gray-300 p-2 text-left px-4">ชื่อวิชา</th>
+                                <th class="border border-gray-300 p-2 w-20">คะแนน</th>
+                                <th class="border border-gray-300 p-2 w-32">ผลการเรียนที่ได้</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradeTableBody">
+                            <!-- JS จะดึงข้อมูลมาแสดงที่นี่ -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-[#c6f6d5] font-bold">
+                                <td colspan="4" class="border border-gray-300 p-3 text-center text-lg">เกรดเฉลี่ย</td>
+                                <td class="border border-gray-300 p-3 text-lg" id="resGPA">0.00</td>
+                            </tr>
+                            <tr class="bg-[#fed7e2] font-bold">
+                                <td colspan="4" class="border border-gray-300 p-3 text-center text-lg">ได้ลำดับที่</td>
+                                <td class="border border-gray-300 p-3 text-lg" id="resRank">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. หน้า Admin -->
+        <section id="adminSection" class="hide bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">ระบบจัดการสำหรับผู้สอน (Admin)</h2>
+                <button id="logoutAdminBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm transition">
+                    ออกจากระบบ Admin
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- ตั้งค่าการประกาศผล -->
+                <div class="bg-gray-50 p-4 rounded-lg border">
+                    <h3 class="font-bold text-lg mb-3">1. กำหนดวันประกาศผลเรียนล่วงหน้า</h3>
+                    <p class="text-sm text-gray-600 mb-3">หากยังไม่ถึงวันที่กำหนด จะไม่มีนักเรียนคนไหนดูได้เลย<br>หากถึงกำหนดแล้ว จะดูได้เฉพาะคนที่ถูก "ติ๊กถูก" ด้านล่างเท่านั้น</p>
+                    <div class="flex gap-2">
+                        <input type="date" id="releaseDateInput" class="border p-2 rounded flex-grow outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="saveDateBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">บันทึก</button>
+                    </div>
+                </div>
+
+                <!-- อัปโหลด Excel -->
+                <div class="bg-gray-50 p-4 rounded-lg border">
+                    <h3 class="font-bold text-lg mb-3">2. อัปโหลดข้อมูล (Excel)</h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        <b>รูปแบบไฟล์:</b> แถวบนสุดเรียงเป็นแนวนอน เช่น<br>
+                        <span class="text-xs text-blue-600 font-mono">เลขบัตร | ชื่อ-สกุล | รหัสวิชา1 | ชื่อวิชา1 | รหัสวิชา2 | ชื่อวิชา2 | ...</span>
+                    </p>
+                    <input type="file" id="excelUpload" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+            </div>
+
+            <!-- จัดการสิทธิ์นักเรียน -->
+            <div class="mt-8">
+                <h3 class="font-bold text-xl mb-4">3. รายชื่อนักเรียนและให้สิทธิ์เข้าดู (ติ๊กถูก)</h3>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700">
+                                <th class="p-3 border-b">เลขบัตรประชาชน</th>
+                                <th class="p-3 border-b">ชื่อ - นามสกุล</th>
+                                <th class="p-3 border-b">เกรดเฉลี่ย</th>
+                                <th class="p-3 border-b">ลำดับที่</th>
+                                <th class="p-3 border-b text-center">สิทธิ์เข้าดูล่วงหน้า<br><span class="text-xs font-normal">(เช็กชื่อ 2 ใน 3)</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminStudentList">
+                            <!-- โหลดข้อมูลนักเรียนมาแสดง -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Firebase Script -->
+    
+
+    <script type="module" src="script.min.js"></script>
+</body>
+</html>

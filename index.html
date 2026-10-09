@@ -19,7 +19,6 @@
     <nav class="bg-blue-800 shadow-md">
         <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center text-white">
             <h1 class="text-xl font-bold">ระบบตรวจสอบผลการเรียน</h1>
-            <!-- เพิ่ม ID ให้ปุ่ม Navbar Admin เพื่อง่ายต่อการควบคุม -->
             
         </div>
     </nav>
@@ -54,8 +53,9 @@
                 </button>
                 
                 <div class="border border-gray-300 rounded-t-lg overflow-hidden">
-                    <div class="bg-gray-100 text-center font-bold py-3 text-lg border-b border-gray-300">
+                    <div class="bg-gray-100 text-center font-bold py-3 text-lg border-b border-gray-300 relative">
                         ข้อมูลของนักเรียน
+                        <span id="vipBadge" class="hide absolute right-4 top-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded shadow animate-pulse">👑 VIP ACCESS</span>
                     </div>
                     <div class="grid grid-cols-4 border-b border-gray-300">
                         <div class="col-span-1 p-3 font-semibold border-r border-gray-300 bg-gray-50">ชื่อ - นามสกุล</div>
